@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐱 Kawaii Cats</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="deco deco-1">🌟</div>
+  <div class="deco deco-2">💖</div>
+  <div class="deco deco-3">✨</div>
+  <div class="deco deco-4">🌈</div>
+
+  <div class="card">
+    <h1 class="title">Kawaii Cats</h1>
+    <p class="subtitle">✨ pastel cuteness overload ✨</p>
+
+    <div class="cat-container">
+      <img id="cat" alt="Random kawaii cat" />
+    </div>
+
+    <button class="btn" onclick="newCat()">🌸 New kitty!</button>
+
+    <div class="cat-info">
+      <h3>🐱 Cat Facts</h3>
+      <ul class="cat-facts" id="catFacts">
+        <li class="fact-loading">Loading cat facts...</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function newCat() {
+      fetch('https://api.thecatapi.com/v1/images/search')
+        .then(r => r.json())
+        .then(data => document.getElementById('cat').src = data[0].url);
+    }
+
+    function loadCatFacts() {
+      fetch('https://catfact.ninja/facts?limit=4')
+        .then(r => r.json())
+        .then(data => {
+          const list = document.getElementById('catFacts');
+          list.innerHTML = data.data.map(f => `<li>${f.fact}</li>`).join('');
+        })
+        .catch(() => {
+          document.getElementById('catFacts').innerHTML =
+            '<li class="fact-loading">Could not load facts 😿</li>';
+        });
+    }
+
+    // Initial load
+    newCat();
+    loadCatFacts();
+  </script>
+</body>
+</html>
