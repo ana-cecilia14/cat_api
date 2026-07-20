@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cat Breeds</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #7e57c2;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    #searchInput {
+      width: 100%;
+      padding: 0.75rem 1.25rem;
+      border: 2px solid #e1bee7;
+      border-radius: 50px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      background: rgba(255,255,255,0.7);
+      transition: border-color 0.2s;
+      margin-bottom: 1.5rem;
+    }
+    #searchInput:focus { border-color: #ce93d8; }
+
+    .breed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+
+    .breed-card {
+      background: rgba(255,255,255,0.7);
+      border: 2px solid rgba(255,255,255,0.6);
+      border-radius: 1.25rem;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .breed-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(206,147,216,0.25);
+      border-color: #ce93d8;
+    }
+    .breed-card h3 {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1rem;
+      color: #7e57c2;
+      margin-bottom: 0.25rem;
+    }
+    .breed-card p {
+      font-size: 0.8rem;
+      color: #b39ddb;
+    }
+
+    .detail-panel {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(20px);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      border: 2px solid rgba(255,255,255,0.6);
+      display: none;
+    }
+    .detail-panel.visible { display: block; }
+
+    .detail-panel h2 {
+      font-family: 'Fredoka One', cursive;
+      color: #7e57c2;
+      margin-bottom: 0.5rem;
+    }
+    .detail-panel .origin {
+      color: #b39ddb;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    .detail-panel .description {
+      color: #5c4d7a;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+    }
+    .detail-panel .temperament {
+      color: #7e57c2;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .detail-panel .temperament strong { color: #5c4d7a; }
+
+    .detail-panel .wiki-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #7e57c2;
+      font-size: 0.9rem;
+    }
+
+    .detail-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.75rem;
+    }
+    .detail-images img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 0.75rem;
+      border: 2px solid white;
+    }
+
+    .loading {
+      text-align: center;
+      color: #b39ddb;
+      padding: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .close-btn {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #b39ddb;
+      transition: color 0.2s;
+    }
+    .close-btn:hover { color: #7e57c2; }
+
+    .count-badge {
+      text-align: center;
+      color: #b39ddb;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" style="max-width: 800px;">
+    <a class="back-link" href="/">← Back to home</a>
+    <h1 class="title">Cat Breeds</h1>
+    <p class="subtitle">explore all cat breeds ✨</p>
+
+    <input id="searchInput" type="text" placeholder="Search breeds..." oninput="filterBreeds()">
+
+    <div id="count" class="count-badge"></div>
+    <div id="breedGrid" class="breed-grid">
+      <div class="loading">Loading breeds...</div>
+    </div>
+
+    <div id="detailPanel" class="detail-panel">
+      <button class="close-btn" onclick="closeDetail()">✕</button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <script>
+    let allBreeds = [];
+
+    fetch('/api/breeds')
+      .then(r => r.json())
+      .then(data => {
+        allBreeds = data;
+        renderBreeds(allBreeds);
+      })
+      .catch(() => {
+        document.getElementById('breedGrid').innerHTML =
+          '<div class="loading">Could not load breeds 😿</div>';
+      });
+
+    function renderBreeds(breeds) {
+      const grid = document.getElementById('breedGrid');
+      document.getElementById('count').textContent = breeds.length + ' breeds';
+
+      if (breeds.length === 0) {
+        grid.innerHTML = '<div class="loading">No breeds found</div>';
+        return;
+      }
+
+      grid.innerHTML = breeds.map(b => `
+        <div class="breed-card" onclick="showDetail('${b.id}')">
+          <h3>${b.name}</h3>
+          <p>${b.origin || 'Unknown origin'}</p>
+        </div>
+      `).join('');
+    }
+
+    function filterBreeds() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allBreeds.filter(b => b.name.toLowerCase().includes(q));
+      renderBreeds(filtered);
+    }
+
+    function showDetail(breedId) {
+      const breed = allBreeds.find(b => b.id === breedId);
+      if (!breed) return;
+
+      const panel = document.getElementById('detailPanel');
+      const content = document.getElementById('detailContent');
+
+      content.innerHTML = `
+        <h2>${breed.name}</h2>
+        <div class="origin">📍 ${breed.origin || 'Unknown origin'} · ${breed.life_span || '?'} years</div>
+        <div class="description">${breed.description || 'No description available.'}</div>
+        <div class="temperament"><strong>Temperament:</strong> ${breed.temperament || 'N/A'}</div>
+        ${breed.wikipedia_url ? `<a class="wiki-link" href="${breed.wikipedia_url}" target="_blank">Wikipedia →</a>` : ''}
+        <div class="detail-images" id="breedImages">
+          <div class="loading">Loading images...</div>
+        </div>
+      `;
+
+      panel.classList.add('visible');
+
+      fetch(`/api/breed-images/${breedId}`)
+        .then(r => r.json())
+        .then(images => {
+          const container = document.getElementById('breedImages');
+          if (images.length === 0) {
+            container.innerHTML = '<div class="loading">No images found</div>';
+            return;
+          }
+          container.innerHTML = images.map(url =>
+            `<img src="${url}" alt="${breed.name}" loading="lazy">`
+          ).join('');
+        })
+        .catch(() => {
+          document.getElementById('breedImages').innerHTML =
+            '<div class="loading">Could not load images 😿</div>';
+        });
+    }
+
+    function closeDetail() {
+      document.getElementById('detailPanel').classList.remove('visible');
+    }
+  </script>
+</body>
+</html>
